@@ -1,0 +1,5 @@
+MONGO_URI=mongodb://absensi:absensi123@127.0.0.1:27017/absensi
+PORT=5000
+JWT_SECRET=rahasianih
+ADMINEMAIL=admin@admin.com
+ADMINPASS=rahasia123
