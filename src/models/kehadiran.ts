@@ -1,13 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IKehadiran extends Document {
-  pegawai: mongoose.Types.ObjectId;
+  Siswa: mongoose.Types.ObjectId;
   datang: Date;
   pulang: Date;
 }
 
 const skemaKehadiran: Schema = new Schema({
-  pegawai: { type: mongoose.Schema.Types.ObjectId, ref: "Pegawai", required: true, },
+  Siswa: { type: mongoose.Schema.Types.ObjectId, ref: "Siswa", required: true, },
   datang: { type: Date, required: true, default: Date.now, },
   pulang: { type: Date, },
 });

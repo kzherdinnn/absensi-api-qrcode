@@ -34,10 +34,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const skemaKehadiran = new mongoose_1.Schema({
-    Siswa: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Siswa", required: true, },
-    datang: { type: Date, required: true, default: Date.now, },
-    pulang: { type: Date, },
+const skemaSiswa = new mongoose_1.Schema({
+    nama: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    peran: { type: String, enum: ["Siswa", "admin"], default: "Siswa" },
 });
-exports.default = mongoose_1.default.model("Kehadiran", skemaKehadiran, 'kehadiran');
-//# sourceMappingURL=kehadiran.js.map
+exports.default = mongoose_1.default.model("Siswa", skemaSiswa, 'Siswa');
+//# sourceMappingURL=siswa.js.map

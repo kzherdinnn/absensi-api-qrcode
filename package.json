@@ -34,7 +34,6 @@
   "overrides": {
     "tar": "^7.5.7",
     "esbuild": "^0.25.0",
-    "path-to-regexp": "^8.2.0",
     "undici": "^7.0.0"
   }
 }

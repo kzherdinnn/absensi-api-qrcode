@@ -1,12 +1,12 @@
 import express from "express";
-import { tambahPegawai, semuaPegawai, login, profil } from "../controllers/pegawaiCtr";
+import { tambahSiswa, semuaSiswa, login, profil } from "../controllers/siswaCtr";
 import { otentikasiMw } from "../middlewares/otentikasiMw";
 import { aksesPeran } from "../middlewares/peranMw";
 
 const rute = express.Router();
 
-rute.post("/", otentikasiMw, aksesPeran('admin'), tambahPegawai);
-rute.get("/", otentikasiMw, aksesPeran('admin'), semuaPegawai);
+rute.post("/", otentikasiMw, aksesPeran('admin'), tambahSiswa);
+rute.get("/", otentikasiMw, aksesPeran('admin'), semuaSiswa);
 rute.get("/profil", otentikasiMw, profil)
 rute.post("/login", login);
 

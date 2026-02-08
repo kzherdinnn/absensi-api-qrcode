@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import crypto from 'crypto';
 import Kehadiran, { IKehadiran } from "../models/kehadiran";
 import KodeQR from "../models/kodeqr";
-import Pegawai from "../models/pegawai";
+import Siswa from "../models/siswa";
 import { broadcast } from "../routes/ruteWs";
 
 function membuatKode(length: number): string {
@@ -33,16 +33,16 @@ export const absen = async (req: Request, res: Response) => {
     const dataKode = await KodeQR.findOne({ kode });
 
     if (!dataKode) {
-      // Jika pegawai tidak ditemukan, kirimkan pesan error
+      // Jika Siswa tidak ditemukan, kirimkan pesan error
       return res.status(404).json({ message: "Kode QR tidak ditemukan" });
     }
     await KodeQR.findOneAndDelete({ kode })
-    // Mencari pegawai berdasarkan ID
-    const pegawai = await Pegawai.findById(req.user.id);
+    // Mencari Siswa berdasarkan ID
+    const siswaData = await Siswa.findById(req.user.id);
 
-    if (!pegawai) {
-      // Jika pegawai tidak ditemukan, kirimkan pesan error
-      return res.status(404).json({ message: "Pegawai tidak ditemukan" });
+    if (!siswaData) {
+      // Jika Siswa tidak ditemukan, kirimkan pesan error
+      return res.status(404).json({ message: "Siswa tidak ditemukan" });
     }
 
     let dataKehadiran: IKehadiran
@@ -55,12 +55,12 @@ export const absen = async (req: Request, res: Response) => {
       const jamAkhir = new Date();
       jamAkhir.setHours(23, 59, 59, 999);
 
-      dataKehadiran = await Kehadiran.findOneAndUpdate({ pegawai: pegawai._id, datang: { $gte: jamMulai, $lt: jamAkhir }, pulang: { $exists: false } }, { $set: { pulang: Date.now() } }, { new: true })
+      dataKehadiran = await Kehadiran.findOneAndUpdate({ Siswa: siswaData._id, datang: { $gte: jamMulai, $lt: jamAkhir }, pulang: { $exists: false } }, { $set: { pulang: Date.now() } }, { new: true })
 
     } else {
       // Membuat kehadiran baru
       const kehadiranBaru = new Kehadiran({
-        pegawai: pegawai._id,
+        Siswa: siswaData._id,
       });
       // Menyimpan kehadiran baru ke database
       dataKehadiran = await kehadiranBaru.save();
@@ -91,7 +91,7 @@ export const semuaKehadiran = async (req: Request, res: Response) => {
       .sort({ datang: -1 })
       .skip(skip)
       .limit(dataPerHalaman)
-      .populate("pegawai", { password: 0, __v: 0, peran: 0 });
+      .populate("Siswa", { password: 0, __v: 0, peran: 0 });
 
     // Menghitung jumlah total kehadiran
     const totalData = await Kehadiran.countDocuments();

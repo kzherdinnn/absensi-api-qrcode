@@ -16,7 +16,7 @@ exports.semuaKehadiran = exports.absen = exports.tampilkanKode = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const kehadiran_1 = __importDefault(require("../models/kehadiran"));
 const kodeqr_1 = __importDefault(require("../models/kodeqr"));
-const pegawai_1 = __importDefault(require("../models/pegawai"));
+const siswa_1 = __importDefault(require("../models/siswa"));
 const ruteWs_1 = require("../routes/ruteWs");
 function membuatKode(length) {
     return crypto_1.default.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
@@ -42,15 +42,15 @@ const absen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // Mencari kode 
         const dataKode = yield kodeqr_1.default.findOne({ kode });
         if (!dataKode) {
-            // Jika pegawai tidak ditemukan, kirimkan pesan error
+            // Jika Siswa tidak ditemukan, kirimkan pesan error
             return res.status(404).json({ message: "Kode QR tidak ditemukan" });
         }
         yield kodeqr_1.default.findOneAndDelete({ kode });
-        // Mencari pegawai berdasarkan ID
-        const pegawai = yield pegawai_1.default.findById(req.user.id);
-        if (!pegawai) {
-            // Jika pegawai tidak ditemukan, kirimkan pesan error
-            return res.status(404).json({ message: "Pegawai tidak ditemukan" });
+        // Mencari Siswa berdasarkan ID
+        const siswaData = yield siswa_1.default.findById(req.user.id);
+        if (!siswaData) {
+            // Jika Siswa tidak ditemukan, kirimkan pesan error
+            return res.status(404).json({ message: "Siswa tidak ditemukan" });
         }
         let dataKehadiran;
         if (jenis === 'pulang') {
@@ -59,12 +59,12 @@ const absen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             jamMulai.setHours(0, 0, 0, 0);
             const jamAkhir = new Date();
             jamAkhir.setHours(23, 59, 59, 999);
-            dataKehadiran = yield kehadiran_1.default.findOneAndUpdate({ pegawai: pegawai._id, datang: { $gte: jamMulai, $lt: jamAkhir }, pulang: { $exists: false } }, { $set: { pulang: Date.now() } }, { new: true });
+            dataKehadiran = yield kehadiran_1.default.findOneAndUpdate({ Siswa: siswaData._id, datang: { $gte: jamMulai, $lt: jamAkhir }, pulang: { $exists: false } }, { $set: { pulang: Date.now() } }, { new: true });
         }
         else {
             // Membuat kehadiran baru
             const kehadiranBaru = new kehadiran_1.default({
-                pegawai: pegawai._id,
+                Siswa: siswaData._id,
             });
             // Menyimpan kehadiran baru ke database
             dataKehadiran = yield kehadiranBaru.save();
@@ -92,7 +92,7 @@ const semuaKehadiran = (req, res) => __awaiter(void 0, void 0, void 0, function*
             .sort({ datang: -1 })
             .skip(skip)
             .limit(dataPerHalaman)
-            .populate("pegawai", { password: 0, __v: 0, peran: 0 });
+            .populate("Siswa", { password: 0, __v: 0, peran: 0 });
         // Menghitung jumlah total kehadiran
         const totalData = yield kehadiran_1.default.countDocuments();
         const totalHalaman = Math.ceil(totalData / dataPerHalaman);

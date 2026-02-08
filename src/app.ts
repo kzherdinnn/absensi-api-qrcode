@@ -4,7 +4,7 @@ import expressWs from 'express-ws';
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
-import rutePegawai from "./routes/rutePegawai";
+import ruteSiswa from "./routes/ruteSiswa";
 import ruteKehadiran from "./routes/ruteKehadiran";
 import ruteWs from './routes/ruteWs';
 
@@ -17,7 +17,7 @@ app.use(cors());
 app.use(morgan('combined'))
 app.use(express.json());
 
-app.use("/api/pegawai", rutePegawai);
+app.use("/api/siswa", ruteSiswa);
 app.use("/api/kehadiran", ruteKehadiran);
 
 ruteWs(app);
@@ -34,5 +34,5 @@ mongoose
   })
   .catch((err) => {
     console.log("Gagal terhubung dengan MongoDB:", err)
-});
+  });
 
