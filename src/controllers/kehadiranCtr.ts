@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import Kehadiran, { IKehadiran } from "../models/kehadiran";
 import KodeQR from "../models/kodeqr";
 import Siswa from "../models/siswa";
-import { broadcast } from "../routes/ruteWs";
+import { broadcast } from "../services/socketService";
 
 function membuatKode(length: number): string {
   return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
