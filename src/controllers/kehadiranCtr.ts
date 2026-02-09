@@ -112,18 +112,45 @@ export const semuaKehadiran = async (req: Request, res: Response) => {
   }
 };
 
-// Aktivitas Terbaru - menampilkan data lengkap (datang dan pulang)
+// Aktivitas Terbaru - menampilkan data terpisah untuk datang dan pulang
 export const aktivitasTerbaru = async (req: Request, res: Response) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseInt(req.query.limit as string) || 20;
 
     // Ambil kehadiran terbaru dengan data siswa
-    const aktivitas = await Kehadiran.find({}, { __v: 0 })
+    const kehadiran = await Kehadiran.find({}, { __v: 0 })
       .sort({ datang: -1 })
       .limit(limit)
       .populate("Siswa", { password: 0, __v: 0, peran: 0 });
 
-    res.status(200).json({ data: aktivitas });
+    // Pisahkan menjadi array aktivitas terpisah untuk datang dan pulang
+    const aktivitas: any[] = [];
+
+    kehadiran.forEach((item: any) => {
+      // Tambahkan aktivitas datang
+      aktivitas.push({
+        _id: `${item._id}_datang`,
+        Siswa: item.Siswa,
+        waktu: item.datang,
+        jenis: 'datang'
+      });
+
+      // Jika ada pulang, tambahkan aktivitas pulang
+      if (item.pulang) {
+        aktivitas.push({
+          _id: `${item._id}_pulang`,
+          Siswa: item.Siswa,
+          waktu: item.pulang,
+          jenis: 'pulang'
+        });
+      }
+    });
+
+    // Sort berdasarkan waktu terbaru dan ambil sesuai limit
+    aktivitas.sort((a, b) => new Date(b.waktu).getTime() - new Date(a.waktu).getTime());
+    const result = aktivitas.slice(0, limit);
+
+    res.status(200).json({ data: result });
   } catch (error) {
     console.error("Gagal mengambil aktivitas terbaru:", error);
     res.status(500).json({ message: "Gagal mengambil aktivitas terbaru" });
