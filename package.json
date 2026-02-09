@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "node node_modules/typescript/lib/tsc.js",
+    "build": "echo 'Build handled by Vercel Builder'",
     "build:local": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsc-watch --onSuccess \"node dist/server.js\""
+    "start": "node dist/src/server.js",
+    "dev": "tsc-watch --onSuccess \"node dist/src/server.js\""
   },
   "keywords": [],
   "author": "",
@@ -18,7 +18,6 @@
     "@types/node": "^20.17.10",
     "@vercel/node": "^4.0.0",
     "tsc-watch": "^6.0.0",
-    "typescript": "^5.7.2",
     "vercel": "^50.13.2"
   },
   "dependencies": {
@@ -31,7 +30,8 @@
     "mongodb": "^6.12.0",
     "mongoose": "^7.0.2",
     "morgan": "^1.10.0",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "typescript": "^5.7.2"
   },
   "overrides": {
     "tar": "^7.5.7",
