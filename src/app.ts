@@ -14,6 +14,10 @@ app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 
+app.get("/api/test", (req, res) => {
+  res.json({ message: "API is working", time: new Date().toISOString(), hasMongoUri: !!process.env.MONGO_URI });
+});
+
 app.use("/api/siswa", ruteSiswa);
 app.use("/api/kehadiran", ruteKehadiran);
 
