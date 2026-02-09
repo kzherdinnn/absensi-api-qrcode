@@ -9,7 +9,7 @@ rute.post("/", otentikasiMw, aksesPeran('admin'), tambahSiswa);
 rute.get("/", otentikasiMw, aksesPeran('admin'), semuaSiswa);
 rute.get("/profil", otentikasiMw, profil)
 rute.post("/login", login);
-rute.put("/:id", otentikasiMw, aksesPeran('admin'), updateSiswa);
+rute.put("/:id", otentikasiMw, updateSiswa);
 rute.delete("/:id", otentikasiMw, aksesPeran('admin'), hapusSiswa);
 
 // Add more routes as needed

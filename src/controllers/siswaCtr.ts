@@ -124,8 +124,14 @@ export const profil = async (req: Request, res: Response) => {
 export const updateSiswa = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { nama, email, password, peran } = req.body;
+  const currentUser = (req as any).user;
 
   try {
+    // 1. Otorisasi: Hanya Admin ATAU Pemilik Akun
+    if (currentUser.peran !== 'admin' && currentUser.id !== id) {
+      return res.status(403).json({ message: "Akses ditolak" });
+    }
+
     const siswa = await Siswa.findById(id);
     if (!siswa) {
       return res.status(404).json({ message: "Siswa tidak ditemukan" });
@@ -133,7 +139,12 @@ export const updateSiswa = async (req: Request, res: Response) => {
 
     if (nama) siswa.nama = nama;
     if (email) siswa.email = email;
-    if (peran) siswa.peran = peran;
+
+    // 2. Batasi Update Peran: Hanya Admin
+    if (currentUser.peran === 'admin' && peran) {
+      siswa.peran = peran;
+    }
+
     if (password) {
       const salt = await bcrypt.genSalt(10);
       siswa.password = await bcrypt.hash(password, salt);
@@ -141,7 +152,12 @@ export const updateSiswa = async (req: Request, res: Response) => {
 
     await siswa.save();
     broadcast("Siswa");
-    res.status(200).json({ message: "Data siswa berhasil diperbarui", data: siswa });
+
+    const updatedData = siswa.toObject();
+    delete (updatedData as any).password;
+    delete (updatedData as any).__v;
+
+    res.status(200).json({ message: "Data siswa berhasil diperbarui", data: updatedData });
   } catch (error) {
     console.error("Gagal update siswa:", error);
     res.status(500).json({ message: "Gagal update siswa" });
