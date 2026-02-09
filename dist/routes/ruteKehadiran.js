@@ -11,6 +11,7 @@ const rute = express_1.default.Router();
 rute.get("/kode", otentikasiMw_1.otentikasiMw, (0, peranMw_1.aksesPeran)('admin'), kehadiranCtr_1.tampilkanKode);
 rute.post("/", otentikasiMw_1.otentikasiMw, (0, peranMw_1.aksesPeran)('siswa'), kehadiranCtr_1.absen);
 rute.get("/", otentikasiMw_1.otentikasiMw, (0, peranMw_1.aksesPeran)('admin'), kehadiranCtr_1.semuaKehadiran);
+rute.get("/statistik", otentikasiMw_1.otentikasiMw, kehadiranCtr_1.statistik);
 // Add more routes as needed
 exports.default = rute;
 //# sourceMappingURL=ruteKehadiran.js.map

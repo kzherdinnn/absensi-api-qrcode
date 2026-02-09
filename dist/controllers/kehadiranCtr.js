@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.semuaKehadiran = exports.absen = exports.tampilkanKode = void 0;
+exports.statistik = exports.semuaKehadiran = exports.absen = exports.tampilkanKode = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const kehadiran_1 = __importDefault(require("../models/kehadiran"));
 const kodeqr_1 = __importDefault(require("../models/kodeqr"));
@@ -112,4 +112,59 @@ const semuaKehadiran = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.semuaKehadiran = semuaKehadiran;
+const statistik = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const today = new Date();
+        // Set to Monday of current week
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        const startOfWeek = new Date(today.setDate(diff));
+        startOfWeek.setHours(0, 0, 0, 0);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+        const stats = yield kehadiran_1.default.aggregate([
+            {
+                $match: {
+                    datang: { $gte: startOfWeek, $lte: endOfWeek }
+                }
+            },
+            {
+                $project: {
+                    dayOfWeek: { $dayOfWeek: "$datang" }, // 1 (Sun) - 7 (Sat)
+                    siswaId: "$Siswa"
+                }
+            },
+            {
+                $group: {
+                    _id: "$dayOfWeek",
+                    uniqueSiswa: { $addToSet: "$siswaId" }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    count: { $size: "$uniqueSiswa" }
+                }
+            }
+        ]);
+        // Map to array [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+        // DB returns: 1 (Sun), 2 (Mon) ... 7 (Sat)
+        // Target: Index 0 (Mon) ... Index 6 (Sun)
+        const weeklyData = [0, 0, 0, 0, 0, 0, 0];
+        stats.forEach(item => {
+            // Map 1->6, 2->0, 3->1 ...
+            const dayIndex = item._id === 1 ? 6 : item._id - 2;
+            if (dayIndex >= 0 && dayIndex < 7) {
+                weeklyData[dayIndex] = item.count;
+            }
+        });
+        res.status(200).json({ data: weeklyData });
+    }
+    catch (error) {
+        console.error("Gagal mengambil statistik:", error);
+        res.status(500).json({ message: "Gagal mengambil statistik" });
+    }
+});
+exports.statistik = statistik;
 //# sourceMappingURL=kehadiranCtr.js.map
