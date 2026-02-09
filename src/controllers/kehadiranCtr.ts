@@ -112,59 +112,140 @@ export const semuaKehadiran = async (req: Request, res: Response) => {
   }
 };
 
+// Aktivitas Terbaru - menampilkan data lengkap (datang dan pulang)
+export const aktivitasTerbaru = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    // Ambil kehadiran terbaru dengan data siswa
+    const aktivitas = await Kehadiran.find({}, { __v: 0 })
+      .sort({ datang: -1 })
+      .limit(limit)
+      .populate("Siswa", { password: 0, __v: 0, peran: 0 });
+
+    res.status(200).json({ data: aktivitas });
+  } catch (error) {
+    console.error("Gagal mengambil aktivitas terbaru:", error);
+    res.status(500).json({ message: "Gagal mengambil aktivitas terbaru" });
+  }
+};
+
 export const statistik = async (req: Request, res: Response) => {
   try {
+    const periode = (req.query.periode as string) || 'weekly'; // daily, weekly, monthly
     const today = new Date();
-    // Set to Monday of current week
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-    const startOfWeek = new Date(today.setDate(diff));
-    startOfWeek.setHours(0, 0, 0, 0);
 
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
+    let startDate: Date;
+    let endDate: Date;
+    let groupFormat: any;
+    let labels: string[] = [];
+    let dataLength: number;
+
+    if (periode === 'daily') {
+      // Statistik harian (24 jam terakhir, per jam)
+      startDate = new Date(today);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+
+      groupFormat = { $hour: "$datang" };
+      dataLength = 24;
+      labels = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+
+    } else if (periode === 'monthly') {
+      // Statistik bulanan (30 hari terakhir)
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+
+      groupFormat = { $dayOfMonth: "$datang" };
+      dataLength = 30;
+      labels = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+      });
+
+    } else {
+      // Statistik mingguan (default)
+      const day = today.getDay();
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+      startDate = new Date(today.setDate(diff));
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
+
+      groupFormat = { $dayOfWeek: "$datang" };
+      dataLength = 7;
+      labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    }
 
     const stats = await Kehadiran.aggregate([
       {
         $match: {
-          datang: { $gte: startOfWeek, $lte: endOfWeek }
+          datang: { $gte: startDate, $lte: endDate }
         }
       },
       {
         $project: {
-          dayOfWeek: { $dayOfWeek: "$datang" }, // 1 (Sun) - 7 (Sat)
-          siswaId: "$Siswa"
+          timeUnit: groupFormat,
+          siswaId: "$Siswa",
+          hasPulang: { $cond: [{ $ifNull: ["$pulang", false] }, 1, 0] }
         }
       },
       {
         $group: {
-          _id: "$dayOfWeek",
-          uniqueSiswa: { $addToSet: "$siswaId" }
+          _id: "$timeUnit",
+          uniqueSiswa: { $addToSet: "$siswaId" },
+          totalDatang: { $sum: 1 },
+          totalPulang: { $sum: "$hasPulang" }
         }
       },
       {
         $project: {
           _id: 1,
-          count: { $size: "$uniqueSiswa" }
+          count: { $size: "$uniqueSiswa" },
+          datang: "$totalDatang",
+          pulang: "$totalPulang"
         }
       }
     ]);
 
-    // Map to array [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
-    // DB returns: 1 (Sun), 2 (Mon) ... 7 (Sat)
-    // Target: Index 0 (Mon) ... Index 6 (Sun)
-    const weeklyData = [0, 0, 0, 0, 0, 0, 0];
+    // Initialize result arrays
+    const resultData = Array(dataLength).fill(0);
+    const datangData = Array(dataLength).fill(0);
+    const pulangData = Array(dataLength).fill(0);
 
     stats.forEach(item => {
-      // Map 1->6, 2->0, 3->1 ...
-      const dayIndex = item._id === 1 ? 6 : item._id - 2;
-      if (dayIndex >= 0 && dayIndex < 7) {
-        weeklyData[dayIndex] = item.count;
+      let index: number;
+
+      if (periode === 'daily') {
+        index = item._id;
+      } else if (periode === 'monthly') {
+        const daysDiff = Math.floor((item._id - startDate.getDate() + 30) % 30);
+        index = daysDiff;
+      } else {
+        // weekly
+        index = item._id === 1 ? 6 : item._id - 2;
+      }
+
+      if (index >= 0 && index < dataLength) {
+        resultData[index] = item.count;
+        datangData[index] = item.datang;
+        pulangData[index] = item.pulang;
       }
     });
 
-    res.status(200).json({ data: weeklyData });
+    res.status(200).json({
+      data: resultData,
+      datang: datangData,
+      pulang: pulangData,
+      labels: labels,
+      periode: periode
+    });
   } catch (error) {
     console.error("Gagal mengambil statistik:", error);
     res.status(500).json({ message: "Gagal mengambil statistik" });
