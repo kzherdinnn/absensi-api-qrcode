@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
+
 import crypto from 'crypto';
 import Kehadiran, { IKehadiran } from "../models/kehadiran";
 import KodeQR from "../models/kodeqr";
@@ -117,8 +119,15 @@ export const aktivitasTerbaru = async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
 
+    // Filter berdasarkan peran pengguna (Admin lihat semua, Siswa lihat sendiri)
+    const user = (req as any).user;
+    let query: any = {};
+    if (user && user.peran !== 'admin') {
+      query.Siswa = user.id;
+    }
+
     // Ambil kehadiran terbaru dengan data siswa
-    const kehadiran = await Kehadiran.find({}, { __v: 0 })
+    const kehadiran = await Kehadiran.find(query, { __v: 0 })
       .sort({ datang: -1 })
       .limit(limit)
       .populate("Siswa", { password: 0, __v: 0, peran: 0 });
@@ -210,11 +219,19 @@ export const statistik = async (req: Request, res: Response) => {
       labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     }
 
+    // Filter statistik berdasarkan peran pengguna
+    const user = (req as any).user;
+    let matchQuery: any = {
+      datang: { $gte: startDate, $lte: endDate }
+    };
+
+    if (user && user.peran !== 'admin') {
+      matchQuery.Siswa = new mongoose.Types.ObjectId(user.id);
+    }
+
     const stats = await Kehadiran.aggregate([
       {
-        $match: {
-          datang: { $gte: startDate, $lte: endDate }
-        }
+        $match: matchQuery
       },
       {
         $project: {
