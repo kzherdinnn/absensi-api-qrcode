@@ -55,7 +55,7 @@ export const semuaSiswa = async (req: Request, res: Response) => {
     const skip = (halaman - 1) * dataPerHalaman;
 
     // Mengambil Siswa dari database menggunakan pagination dan mengurutkan berdasarkan tanggal secara descending
-    const data = await Siswa.find({}, { _id: 0, password: 0, __v: 0 })
+    const data = await Siswa.find({}, { password: 0, __v: 0 })
       .sort({ nama: 1 })
       .skip(skip)
       .limit(dataPerHalaman);
@@ -111,3 +111,47 @@ export const profil = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Gagal mengambil data profil" });
   }
 }
+
+export const updateSiswa = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { nama, email, password, peran } = req.body;
+
+  try {
+    const siswa = await Siswa.findById(id);
+    if (!siswa) {
+      return res.status(404).json({ message: "Siswa tidak ditemukan" });
+    }
+
+    if (nama) siswa.nama = nama;
+    if (email) siswa.email = email;
+    if (peran) siswa.peran = peran;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      siswa.password = await bcrypt.hash(password, salt);
+    }
+
+    await siswa.save();
+    broadcast("Siswa");
+    res.status(200).json({ message: "Data siswa berhasil diperbarui", data: siswa });
+  } catch (error) {
+    console.error("Gagal update siswa:", error);
+    res.status(500).json({ message: "Gagal update siswa" });
+  }
+};
+
+export const hapusSiswa = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const deletedSiswa = await Siswa.findByIdAndDelete(id);
+    if (!deletedSiswa) {
+      return res.status(404).json({ message: "Siswa tidak ditemukan" });
+    }
+
+    broadcast("Siswa");
+    res.status(200).json({ message: "Siswa berhasil dihapus" });
+  } catch (error) {
+    console.error("Gagal menghapus siswa:", error);
+    res.status(500).json({ message: "Gagal menghapus siswa" });
+  }
+};
