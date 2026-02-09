@@ -1,17 +1,14 @@
 import express from "express";
-import expressWs from 'express-ws';
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import ruteSiswa from "./routes/ruteSiswa";
 import ruteKehadiran from "./routes/ruteKehadiran";
-import ruteWs from './routes/ruteWs';
 import mongoose from "mongoose";
 
 dotenv.config();
 
 const app = express();
-expressWs(app);
 
 app.use(cors());
 app.use(morgan('combined'));
@@ -19,8 +16,6 @@ app.use(express.json());
 
 app.use("/api/siswa", ruteSiswa);
 app.use("/api/kehadiran", ruteKehadiran);
-
-ruteWs(app);
 
 // Cached connection for serverless
 let isConnected = false;
