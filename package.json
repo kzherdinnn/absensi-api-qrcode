@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "node node_modules/typescript/lib/tsc.js",
     "build:local": "tsc",
     "start": "node dist/server.js",
     "dev": "tsc-watch --onSuccess \"node dist/server.js\""
