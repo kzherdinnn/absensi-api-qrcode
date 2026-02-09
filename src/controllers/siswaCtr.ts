@@ -17,11 +17,20 @@ const tambahData = async (nama: string, email: string, password: string, peran: 
 }
 
 export const tambahSiswa = async (req: Request, res: Response) => {
-  const { nama, email, password, peran } = req.body;
+  let { nama, email, password, peran } = req.body;
+
+  // Jika password kosong, gunakan default sesuai peran
+  if (!password) {
+    if (peran === 'admin') {
+      password = 'admin#123';
+    } else {
+      password = 'siswa#123';
+    }
+  }
 
   // Validasi data yang diterima dari request
-  if (!nama || !email || !password) {
-    return res.status(400).json({ message: "Nama, email dan password harus disertakan" });
+  if (!nama || !email) {
+    return res.status(400).json({ message: "Nama dan email harus disertakan" });
   }
 
   try {
