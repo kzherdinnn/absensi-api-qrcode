@@ -12,6 +12,7 @@
 Dibangun dengan **Express.js**, **TypeScript**, dan **MongoDB** — siap deploy ke **Vercel**.
 
 [![Frontend Repo](https://img.shields.io/badge/🖥️_Frontend_App-absensi--nextjs--qrcode-6366f1?style=for-the-badge)](https://github.com/kzherdinnn/absensi-nextjs-qrcode)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-absensiku.onesite.my.id-10b981?style=for-the-badge)](https://absensiku.onesite.my.id)
 
 </div>
 
@@ -250,6 +251,7 @@ API ini dikonsumsi oleh aplikasi **frontend Next.js**. Pastikan `NEXT_PUBLIC_API
 
 | Layanan | URL |
 |---------|-----|
+| **🌐 Live Demo** | [absensiku.onesite.my.id](https://absensiku.onesite.my.id) |
 | **Frontend App** | [github.com/kzherdinnn/absensi-nextjs-qrcode](https://github.com/kzherdinnn/absensi-nextjs-qrcode) |
 | **Backend API** | [github.com/kzherdinnn/absensi-api-qrcode](https://github.com/kzherdinnn/absensi-api-qrcode) *(repo ini)* |
 
